@@ -1,0 +1,6 @@
+{
+  "name": "Nord Stage 4 Synth & SoundFont Workstation",
+  "description": "Professional virtual synthesizer and soundfont workstation inspired by the Nord Stage 4, featuring multi-engine polyphonic synthesis, physical modeled effects, arpeggiator, SF2 sample playback, and Clavia Nord format analysis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
