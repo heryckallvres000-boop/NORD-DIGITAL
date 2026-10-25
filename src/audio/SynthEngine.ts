@@ -8,6 +8,7 @@ import { Arpeggiator } from './Arpeggiator';
 import { EffectsChain } from './EffectsChain';
 import { SampleLibrary } from './SampleLibrary';
 import { SynthVoice } from './SynthVoice';
+import { TestAudioPlayer } from './TestAudioPlayer';
 import { SynthParams } from '../types/synth';
 
 export class SynthEngine {
@@ -16,6 +17,7 @@ export class SynthEngine {
   private effectsChain: EffectsChain | null = null;
   private sampleLibrary: SampleLibrary;
   private arpeggiator: Arpeggiator;
+  public testAudioPlayer: TestAudioPlayer;
 
   // Voice Pool
   private maxPolyphony = 16;
@@ -49,9 +51,11 @@ export class SynthEngine {
   private noteListeners: ((activeNotes: number[]) => void)[] = [];
   private meterListeners: ((meterLevels: { layerA: number; layerB: number; layerC: number }) => void)[] = [];
   private midiStatusListeners: ((deviceName: string | null) => void)[] = [];
+  private midiCcListeners: ((cc: number, value: number) => void)[] = [];
 
   private constructor() {
     this.sampleLibrary = SampleLibrary.getInstance();
+    this.testAudioPlayer = new TestAudioPlayer();
     this.arpeggiator = new Arpeggiator((note, vel, dur) => {
       this.triggerVoice(note, vel, false);
       setTimeout(() => {
@@ -75,6 +79,9 @@ export class SynthEngine {
 
       // Create effects chain
       this.effectsChain = new EffectsChain(this.ctx);
+
+      // Connect TestAudioPlayer to effects chain input
+      this.testAudioPlayer.setContextAndDestination(this.ctx, this.effectsChain.inputNode);
 
       // Create Layer gain nodes
       this.layerGainA = this.ctx.createGain();
@@ -101,6 +108,14 @@ export class SynthEngine {
     }
 
     return this.ctx;
+  }
+
+  public getAudioContext(): AudioContext | null {
+    return this.ctx;
+  }
+
+  public getEffectsChain(): EffectsChain | null {
+    return this.effectsChain;
   }
 
   public getAnalyzerNode(): AnalyserNode | null {
@@ -345,6 +360,13 @@ export class SynthEngine {
     }
   }
 
+  public onMidiCc(callback: (cc: number, value: number) => void) {
+    this.midiCcListeners.push(callback);
+    return () => {
+      this.midiCcListeners = this.midiCcListeners.filter((l) => l !== callback);
+    };
+  }
+
   private handleMidiMessage(event: any) {
     const data = event.data;
     if (!data) return;
@@ -364,6 +386,11 @@ export class SynthEngine {
         this.noteOff(note);
         break;
       case 0xb: // Control Change
+        // Notify custom MIDI CC listeners (for MIDI Learn & Param mapping)
+        for (const l of this.midiCcListeners) {
+          l(note, velocity);
+        }
+
         if (note === 1) { // Mod Wheel
           this.setModWheel(velocity / 127);
         } else if (note === 64) { // Sustain Pedal

@@ -184,11 +184,20 @@ export interface SoundFontPreset {
   }[];
 }
 
+export interface SamplePlaybackData {
+  buffer: AudioBuffer;
+  rootKey: number;
+  loop: boolean;
+  loopStart?: number;
+  loopEnd?: number;
+  name?: string;
+}
+
 export interface LoadedInstrumentFile {
   id: string;
   fileName: string;
   fileSize: number;
-  format: 'SF2' | 'NPNO' | 'NSMP' | 'NSMP3' | 'NSMP4' | 'UNKNOWN';
+  format: 'SF2' | 'NPNO' | 'NSMP' | 'NSMP3' | 'NSMP4' | 'SAMPLE' | 'UNKNOWN';
   isValid: boolean;
   status: 'READY' | 'ANALYZED' | 'UNSUPPORTED' | 'ERROR';
   description: string;

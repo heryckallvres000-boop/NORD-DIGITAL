@@ -244,17 +244,32 @@ export class SynthVoice {
   ) {
     const now = this.ctx.currentTime;
     const sampleLib = SampleLibrary.getInstance();
-    const audioBuf = sampleLib.getSample(sampleId, midiNote);
+    const sampleData = sampleLib.getSampleData(sampleId, midiNote);
 
-    if (audioBuf) {
+    if (sampleData && sampleData.buffer) {
       const source = this.ctx.createBufferSource();
-      source.buffer = audioBuf;
+      source.buffer = sampleData.buffer;
 
-      const baseNoteFreq = 440 * Math.pow(2, (midiNote - 69) / 12);
-      source.playbackRate.setValueAtTime(targetFreq / baseNoteFreq, now);
+      // Pitch calculation relative to the sample's recorded root key
+      const rootKey = sampleData.rootKey || 60;
+      const semitonesOffset = (midiNote + params.octaveShift * 12 + params.masterTune + params.fineTune / 100) - rootKey;
+      const rate = Math.pow(2, semitonesOffset / 12);
+      source.playbackRate.setValueAtTime(Math.max(0.02, Math.min(24.0, rate)), now);
+
+      if (sampleData.loop) {
+        source.loop = true;
+        if (
+          sampleData.loopStart !== undefined &&
+          sampleData.loopEnd !== undefined &&
+          sampleData.loopEnd > sampleData.loopStart
+        ) {
+          source.loopStart = sampleData.loopStart;
+          source.loopEnd = sampleData.loopEnd;
+        }
+      }
 
       const gain = this.ctx.createGain();
-      gain.gain.value = 0.8;
+      gain.gain.value = 0.85;
       source.connect(gain);
       gain.connect(this.filterNode);
       source.start(now);
@@ -262,7 +277,7 @@ export class SynthVoice {
       this.oscillators.push(source);
       this.oscGains.push(gain);
     } else {
-      // Fallback to rich analog saw
+      // Fallback to rich analog saw so audio NEVER fails
       this.startAnalogSynthesis(targetFreq, params);
     }
   }

@@ -36,6 +36,7 @@ export default function App() {
   // UI & View state (Default to 'hardware' console mode auto-fitted to notebook screen)
   const [viewMode, setViewMode] = useState<ViewMode>('hardware');
   const [zoomLevel, setZoomLevel] = useState<number>(1.0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState<boolean>(true);
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
   const [midiDevice, setMidiDevice] = useState<string | null>(null);
   const [isPlayingTest, setIsPlayingTest] = useState(false);
@@ -122,7 +123,15 @@ export default function App() {
       mode: 'SAMPLES',
       selectedSampleId: sampleId,
       oscWaveform: 'sample',
+      layerA_on: true,
+      layerA_level: params.layerA_level > 0.1 ? params.layerA_level : 0.85,
     });
+    // Update preset display name and layerA descriptor so OLED shows the new instrument
+    setCurrentPreset((prev) => ({
+      ...prev,
+      name: name.slice(0, 22),
+      layerA_desc: name.slice(0, 16),
+    }));
   };
 
   // Panic: cut all audio
@@ -143,6 +152,8 @@ export default function App() {
         viewMode={viewMode}
         zoomLevel={zoomLevel}
         midiDevice={midiDevice}
+        isKeyboardVisible={isKeyboardVisible}
+        onToggleKeyboard={() => setIsKeyboardVisible((prev) => !prev)}
         onSetViewMode={setViewMode}
         onZoomIn={() => setZoomLevel((z) => Math.min(1.4, z + 0.1))}
         onZoomOut={() => setZoomLevel((z) => Math.max(0.65, z - 0.1))}
@@ -154,9 +165,9 @@ export default function App() {
       />
 
       {/* Main Workspace */}
-      <main className="flex-1 flex flex-col justify-start overflow-x-hidden pb-4">
+      <main className="flex-1 flex flex-col justify-start overflow-x-hidden pb-2">
         {/* Hardware Synthesizer / Layer Effects Viewport */}
-        <div className="w-full flex items-center justify-center p-1 sm:p-2">
+        <div className="w-full flex-1 flex items-center justify-center p-1 sm:p-2">
           {viewMode === 'effects_focus' ? (
             <div
               className="w-full flex justify-center transition-transform origin-top py-2"
@@ -175,6 +186,7 @@ export default function App() {
             <HardwarePanel
               viewMode={viewMode === 'hardware' ? 'hardware' : 'responsive'}
               zoomLevel={zoomLevel}
+              isKeyboardVisible={isKeyboardVisible}
               params={params}
               currentPreset={currentPreset}
               presets={presets}
@@ -189,7 +201,7 @@ export default function App() {
         </div>
 
         {/* Bottom Interactive Piano Keyboard & Controllers */}
-        <div className="w-full max-w-7xl mx-auto px-2 md:px-4">
+        <div className={isKeyboardVisible ? 'w-full max-w-7xl mx-auto px-2 md:px-4 mt-auto' : 'hidden'}>
           <PianoKeyboard
             activeNotes={activeNotes}
             onNoteOn={(note, vel) => synthEngine.noteOn(note, vel)}
@@ -199,6 +211,22 @@ export default function App() {
             onSustainPedal={(isDown) => synthEngine.setSustainPedal(isDown)}
           />
         </div>
+
+        {/* Discreet bottom floating bar when keyboard is hidden */}
+        {!isKeyboardVisible && (
+          <div className="flex items-center justify-center py-1 mt-auto">
+            <button
+              onClick={() => setIsKeyboardVisible(true)}
+              className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#181d26]/90 hover:bg-[#252c38] text-neutral-300 hover:text-white text-xs border border-[#3b4554] shadow-lg transition-all active:scale-95"
+              title="Mostrar layout do teclado e controles"
+            >
+              <span>🎹 Mostrar Teclado</span>
+              <span className="text-[10px] text-cyan-400 font-mono hidden sm:inline">
+                (Teclado do notebook / USB-MIDI ativos)
+              </span>
+            </button>
+          </div>
+        )}
       </main>
 
       {/* Modals */}

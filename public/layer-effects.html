@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nord Layer Effects - Hardware Rack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ================================================================
+       RESET & BASE STYLES
+       ================================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: #121418;
+      background-image: 
+        radial-gradient(circle at 50% 10%, #20242e 0%, transparent 60%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 4px);
+      color: #e0e4ec;
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    /* ================================================================
+       NORD RED CHASSIS & BEVELS
+       ================================================================ */
+    .rack-chassis {
+      position: relative;
+      width: 100%;
+      max-width: 1060px;
+      background: linear-gradient(180deg, #b01923 0%, #871018 35%, #700b12 85%, #46060b 100%);
+      border-radius: 10px;
+      padding: 12px 14px 16px;
+      box-shadow: 
+        0 30px 70px rgba(0, 0, 0, 0.95),
+        0 10px 25px rgba(0, 0, 0, 0.7),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.8);
+      border: 4px solid #5a090f;
+    }
+
+    .chassis-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 0 8px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #fca5a5;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding-bottom: 6px;
+    }
+
+    .chassis-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.18em;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chassis-badge {
+      font-size: 8px;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #fecaca;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* ================================================================
+       MAIN HARDWARE PANEL (DARK MATTE CHARCOAL)
+       ================================================================ */
+    .panel-faceplate {
+      position: relative;
+      background: #272b33;
+      background: linear-gradient(180deg, #2d323c 0%, #252932 60%, #1e2229 100%);
+      border: 2px solid #14171d;
+      border-radius: 6px;
+      padding: 10px;
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 0.15),
+        inset 0 20px 40px rgba(0, 0, 0, 0.4),
+        0 8px 18px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Grid Layout: Left Column (MOD 1, MOD 2, AMP/EQ) | Right Column (DELAY, COMP, REVERB) */
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 1fr;
+      gap: 8px;
+    }
+
+    @media (max-width: 860px) {
+      .panel-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ================================================================
+       SECTION BOXES (SILKSCREEN BORDERS & CUTOUT TITLES)
+       ================================================================ */
+    .section-box {
+      position: relative;
+      border: 1px solid #4a5468;
+      border-radius: 4px;
+      background: rgba(30, 35, 44, 0.92);
+      padding: 10px 10px 8px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+      margin-top: 6px;
+    }
+
+    .section-cutout-title {
+      position: absolute;
+      top: -7px;
+      left: 12px;
+      background: #262a33;
+      padding: 0 6px;
+      font-size: 9.5px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: #ffffff;
+      text-transform: uppercase;
+      z-index: 5;
+    }
+
+    /* ================================================================
+       ROTARY KNOBS WITH RADIAL PRINTED SCALES
+       ================================================================ */
+    .knob-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      cursor: ns-resize;
+      outline: none;
+    }
+
+    .knob-dial-assembly {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .radial-tick {
+      position: absolute;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      font-weight: 700;
+      color: #bcc3d2;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      line-height: 1;
+    }
+
+    .knob-wheel {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #444b58 0%, #20242c 55%, #0f1115 100%);
+      border: 1px solid #0e1014;
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.9),
+        inset 0 1px 1px rgba(255, 255, 255, 0.25);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(0deg);
+      transition: box-shadow 0.1s;
+    }
+
+    .knob-pointer-line {
+      position: absolute;
+      top: 2px;
+      width: 2px;
+      height: 8.5px;
+      background: #ffffff;
+      border-radius: 1px;
+      box-shadow: 0 0 3px rgba(255, 255, 255, 0.95);
+    }
+
+    .knob-center-cap {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #181b22, #323844);
+      border: 1px solid rgba(0, 0, 0, 0.8);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .knob-label {
+      font-size: 8.5px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #e2e8f0;
+      margin-top: 3px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .knob-sub-badge {
+      font-size: 6.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 1px 3px;
+      border-radius: 2px;
+      margin-top: 2px;
+      border: 1px solid #64748b;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+
+    .knob-sub-badge.active {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+
+    .midi-badge-dot {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 5px #f59e0b;
+      border: 1px solid #000;
+      display: none;
+    }
+
+    .midi-badge-dot.visible {
+      display: block;
+    }
+
+    /* Tooltip */
+    .knob-tooltip {
+      position: absolute;
+      top: -20px;
+      background: rgba(0, 0, 0, 0.92);
+      border: 1px solid #64748b;
+      border-radius: 3px;
+      padding: 2px 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      color: #38bdf8;
+      pointer-events: none;
+      white-space: nowrap;
+      display: none;
+      z-index: 50;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+    }
+
+    .knob-container:hover .knob-tooltip,
+    .knob-container.dragging .knob-tooltip {
+      display: block;
+    }
+
+    /* ================================================================
+       TACTILE PUSH BUTTONS & ROCKER SWITCHES
+       ================================================================ */
+    .tactile-btn {
+      position: relative;
+      background: linear-gradient(180deg, #2e333d 0%, #1a1d24 60%, #111317 100%);
+      border: 1px solid #0d0f13;
+      border-radius: 3px;
+      padding: 3px 6px;
+      box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      transition: transform 0.05s, box-shadow 0.05s;
+    }
+
+    .tactile-btn:active, .tactile-btn.pressed {
+      transform: translateY(1.5px);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.9);
+      background: linear-gradient(180deg, #181a20 0%, #252932 100%);
+    }
+
+    .btn-label-text {
+      font-size: 7.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #cbd5e1;
+      line-height: 1;
+      margin-top: 3px;
+    }
+
+    .btn-red-pill {
+      background: #7a0f16;
+      color: #ffffff !important;
+      padding: 1.5px 4px;
+      border-radius: 2px;
+      font-size: 7.5px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      border: 1px solid #a8131e;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .btn-boxed-text {
+      border: 1px solid #717d96;
+      padding: 1px 3px;
+      border-radius: 2px;
+      color: #e2e8f0;
+      font-size: 7.5px;
+      font-weight: 800;
+    }
+
+    /* Rocker Switch */
+    .rocker-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .rocker-label {
+      font-size: 8px;
+      font-weight: 900;
+      color: #cbd5e1;
+      letter-spacing: 0.04em;
+    }
+
+    .rocker-switch {
+      width: 19px;
+      height: 38px;
+      background: #101216;
+      border-radius: 4px;
+      border: 1.5px solid #080a0c;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.6);
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .rocker-paddle {
+      width: 100%;
+      height: 52%;
+      background: linear-gradient(180deg, #4b5262 0%, #2d3340 100%);
+      border-radius: 2px;
+      border: 1px solid #636c7f;
+      transition: transform 0.12s ease-out, background 0.12s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.7);
+    }
+
+    .rocker-switch.on .rocker-paddle {
+      transform: translateY(18px);
+      background: linear-gradient(180deg, #2d3340 0%, #1f232c 100%);
+      border-color: #3f4656;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* Horizontal Rocker Switch */
+    .rocker-switch.horizontal {
+      width: 36px;
+      height: 18px;
+      flex-direction: row;
+    }
+
+    .rocker-switch.horizontal .rocker-paddle {
+      width: 52%;
+      height: 100%;
+    }
+
+    .rocker-switch.horizontal.on .rocker-paddle {
+      transform: translateX(17px);
+    }
+
+    /* ================================================================
+       VIVID LED INDICATORS
+       =============================================================== */
+    .led-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background: #3a1215;
+      border: 1px solid #20080a;
+      box-shadow: inset 0 1px 1px rgba(0,0,0,0.8);
+      display: inline-block;
+      transition: background 0.1s, box-shadow 0.1s;
+    }
+
+    .led-dot.on {
+      background: #ef4444;
+      border-color: #fca5a5;
+      box-shadow: 
+        0 0 6px #ef4444,
+        0 0 12px rgba(239, 68, 68, 0.7),
+        inset 0 1px 1px #ffffff;
+    }
+
+    .led-dot.amber.on {
+      background: #f59e0b;
+      border-color: #fde68a;
+      box-shadow: 
+        0 0 6px #f59e0b,
+        0 0 12px rgba(245, 158, 11, 0.7),
+        inset 0 1px 1px #ffffff;
+    }
+
+    .led-dot.green.on {
+      background: #10b981;
+      border-color: #a7f3d0;
+      box-shadow: 
+        0 0 6px #10b981,
+        0 0 12px rgba(16, 185, 129, 0.7),
+        inset 0 1px 1px #ffffff;
+    }
+
+    /* ================================================================
+       VERTICAL SELECTOR COLUMNS (e.g. RM, TREM, A-PAN / CHOR, FLANG, etc)
+       ================================================================ */
+    .vertical-selector-matrix {
+      display: flex;
+      gap: 12px;
+      background: #171b22;
+      border: 1px solid #3d4658;
+      border-radius: 4px;
+      padding: 6px 8px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.7);
+    }
+
+    .selector-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .selector-row-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 7.5px;
+      font-weight: 800;
+      color: #94a3b8;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .selector-row-item:hover {
+      color: #ffffff;
+    }
+
+    .selector-row-item.active {
+      color: #ffffff;
+    }
+
+    .selector-row-item.active .led-dot {
+      background: #ef4444;
+      border-color: #fca5a5;
+      box-shadow: 0 0 6px #ef4444, 0 0 10px rgba(239, 68, 68, 0.7);
+    }
+
+    /* ================================================================
+       REALTIME TEST AUDIO CONTROLLER & VISUALIZER BAR
+       ================================================================ */
+    .audio-player-dock {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #3c4456;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .player-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .audio-src-btn {
+      background: #1b2029;
+      border: 1px solid #4a5568;
+      border-radius: 4px;
+      color: #cbd5e1;
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      transition: all 0.15s;
+    }
+
+    .audio-src-btn:hover {
+      background: #2a3342;
+      border-color: #64748b;
+      color: #ffffff;
+    }
+
+    .audio-src-btn.active {
+      background: #991b1b;
+      border-color: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    }
+
+    .visualizer-canvas {
+      width: 160px;
+      height: 30px;
+      border-radius: 3px;
+      background: #0d1015;
+      border: 1px solid #28303e;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    /* ================================================================
+       FLOATING MIDI LEARN MODAL
+       ================================================================ */
+    .midi-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(3px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .midi-modal-overlay.open {
+      display: flex;
+    }
+
+    .midi-modal-card {
+      background: #1e232b;
+      border: 2px solid #5a667d;
+      border-radius: 8px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.95);
+      width: 90%;
+      max-width: 440px;
+      padding: 20px;
+      color: #e2e8f0;
+      text-align: center;
+    }
+
+    .midi-modal-card h3 {
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .midi-pulse-box {
+      background: #12151b;
+      border: 1px dashed #f59e0b;
+      border-radius: 6px;
+      padding: 16px;
+      margin: 14px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #fbbf24;
+      animation: pulseBorder 1.5s infinite;
+    }
+
+    @keyframes pulseBorder {
+      0%, 100% { border-color: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+      50% { border-color: #ef4444; box-shadow: 0 0 16px rgba(239, 68, 68, 0.6); }
+    }
+
+    .midi-modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .midi-modal-actions button {
+      padding: 6px 14px;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      border: 1px solid #475569;
+      background: #334155;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NORD RED METALLIC CHASSIS -->
+  <div class="rack-chassis">
+    <!-- Top Red Lip -->
+    <div class="chassis-header">
+      <div style="display:flex; gap:16px;">
+        <span>ROTOR PEDAL</span>
+        <span>FOOT SWITCH</span>
+        <span>MIDI IN/OUT</span>
+      </div>
+      <div class="chassis-title">
+        <span>NORD STAGE 4</span>
+        <span class="chassis-badge">LAYER EFFECTS 1:1 REPLICA</span>
+      </div>
+      <div style="display:flex; gap:16px; align-items:center;">
+        <span>AC IN ~230V</span>
+        <span style="color:#34d399; display:flex; align-items:center; gap:4px;">
+          <span class="led-dot green on"></span> READY
+        </span>
+      </div>
+    </div>
+
+    <!-- MAIN DARK MATTE HARDWARE FACEPLATE -->
+    <div class="panel-faceplate">
+      <div class="panel-grid">
+        
+        <!-- ============================================================
+             LEFT COLUMN: MOD 1, MOD 2, AMP SIM / EQ
+             ============================================================ -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          
+          <!-- 1. MOD 1 -->
+          <div class="section-box" id="sec-mod1">
+            <div class="section-cutout-title">MOD 1</div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:4px;">
+              <!-- Left Knobs: RATE & AMOUNT -->
+              <div style="display:flex; gap:12px;">
+                <!-- RATE Knob -->
+                <div class="knob-container" id="knob-mod1-rate" data-min="0" data-max="10" data-step="0.1" data-val="4.0" data-id="mod1Rate" data-label="RATE">
+                  <div class="knob-tooltip">4.0</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">RATE</div>
+                  <div style="display:flex; gap:4px; align-items:center; margin-top:2px;">
+                    <span class="knob-sub-badge" id="btn-mod1-sens">SENS</span>
+                    <span class="led-dot on" id="led-mod1-mstclk"></span>
+                    <span class="btn-red-pill" id="btn-mod1-mstclk" style="cursor:pointer;">MST CLK</span>
+                  </div>
+                </div>
+
+                <!-- AMOUNT Knob -->
+                <div class="knob-container" id="knob-mod1-amount" data-min="0" data-max="10" data-step="0.1" data-val="5.5" data-id="mod1Amount" data-label="AMOUNT">
+                  <div class="knob-tooltip">5.5</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">AMOUNT</div>
+                  <div style="margin-top:3px;"><span class="led-dot on" id="led-mod1-active"></span></div>
+                </div>
+              </div>
+
+              <!-- Center Vertical Selector: RM, TREM, A-PAN / A-WAH, WAH, PUMP -->
+              <div style="display:flex; flex-direction:column; align-items:center;">
+                <div class="vertical-selector-matrix">
+                  <div class="selector-col">
+                    <div class="selector-row-item" data-eff="RM" onclick="selectMod1('RM')"><span>RM</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item active" data-eff="TREM" onclick="selectMod1('TREM')"><span>TREM</span><span class="led-dot on"></span></div>
+                    <div class="selector-row-item" data-eff="A-PAN" onclick="selectMod1('A-PAN')"><span>A-PAN</span><span class="led-dot"></span></div>
+                  </div>
+                  <div class="selector-col">
+                    <div class="selector-row-item" data-eff="A-WAH" onclick="selectMod1('A-WAH')"><span class="btn-boxed-text">A-WAH</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item" data-eff="WAH" onclick="selectMod1('WAH')"><span class="btn-boxed-text">WAH</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item" data-eff="PUMP" onclick="selectMod1('PUMP')"><span class="btn-boxed-text">PUMP</span><span class="led-dot"></span></div>
+                  </div>
+                </div>
+
+                <!-- VARIATION & PED BUTTONS -->
+                <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                  <button class="tactile-btn" id="btn-mod1-var" onclick="toggleMod1Var()">
+                    <span class="led-dot" id="led-mod1-var"></span>
+                    <span class="btn-label-text">VARIATION ▼</span>
+                  </button>
+                  <span class="btn-boxed-text" id="btn-mod1-ped" style="cursor:pointer;" onclick="toggleMod1Ped()">PED ▼</span>
+                </div>
+              </div>
+
+              <!-- Right: ON ROCKER SWITCH -->
+              <div class="rocker-wrapper">
+                <span class="rocker-label">ON</span>
+                <span class="led-dot on" id="led-mod1-on"></span>
+                <div class="rocker-switch on" id="sw-mod1-on" onclick="toggleSwitch('mod1')">
+                  <div class="rocker-paddle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. MOD 2 -->
+          <div class="section-box" id="sec-mod2">
+            <div class="section-cutout-title">MOD 2</div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:4px;">
+              <!-- Knobs: RATE & AMOUNT -->
+              <div style="display:flex; gap:16px;">
+                <div class="knob-container" id="knob-mod2-rate" data-min="0" data-max="10" data-step="0.1" data-val="3.2" data-id="mod2Rate" data-label="RATE">
+                  <div class="knob-tooltip">3.2</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">RATE</div>
+                  <div style="margin-top:3px;"><span class="led-dot on" id="led-mod2-rate"></span></div>
+                </div>
+
+                <div class="knob-container" id="knob-mod2-amount" data-min="0" data-max="10" data-step="0.1" data-val="6.5" data-id="mod2Amount" data-label="AMOUNT">
+                  <div class="knob-tooltip">6.5</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">AMOUNT</div>
+                  <div style="margin-top:3px;"><span class="led-dot on" id="led-mod2-amount"></span></div>
+                </div>
+              </div>
+
+              <!-- Selector: CHOR, FLANG, PHAS / VIBE, ENS, SPIN -->
+              <div style="display:flex; flex-direction:column; align-items:center;">
+                <div class="vertical-selector-matrix">
+                  <div class="selector-col">
+                    <div class="selector-row-item active" data-eff="CHOR" onclick="selectMod2('CHOR')"><span>CHOR</span><span class="led-dot on"></span></div>
+                    <div class="selector-row-item" data-eff="FLANG" onclick="selectMod2('FLANG')"><span>FLANG</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item" data-eff="PHAS" onclick="selectMod2('PHAS')"><span>PHAS</span><span class="led-dot"></span></div>
+                  </div>
+                  <div class="selector-col">
+                    <div class="selector-row-item" data-eff="VIBE" onclick="selectMod2('VIBE')"><span>VIBE</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item" data-eff="ENS" onclick="selectMod2('ENS')"><span>ENS</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item" data-eff="SPIN" onclick="selectMod2('SPIN')"><span>SPIN</span><span class="led-dot"></span></div>
+                  </div>
+                </div>
+
+                <!-- VARIATION BUTTON -->
+                <div style="margin-top:6px;">
+                  <button class="tactile-btn" id="btn-mod2-var" onclick="toggleMod2Var()">
+                    <span class="led-dot" id="led-mod2-var"></span>
+                    <span class="btn-label-text">VARIATION ▼</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Right: ON ROCKER SWITCH -->
+              <div class="rocker-wrapper">
+                <span class="rocker-label">ON</span>
+                <span class="led-dot on" id="led-mod2-on"></span>
+                <div class="rocker-switch on" id="sw-mod2-on" onclick="toggleSwitch('mod2')">
+                  <div class="rocker-paddle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. AMP SIM / EQ -->
+          <div class="section-box" id="sec-amp-eq">
+            <div class="section-cutout-title">AMP SIM / EQ</div>
+            
+            <!-- Top Row: DRIVE, FREQ & Models -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #374151; padding-bottom:6px; margin-top:2px;">
+              <div style="display:flex; gap:12px; align-items:flex-start;">
+                <!-- Upper ON Indicator -->
+                <div style="display:flex; flex-direction:column; align-items:center; margin-right:2px;">
+                  <span style="font-size:7px; font-weight:800; color:#cbd5e1;">ON</span>
+                  <span class="led-dot on" id="led-amp-on1"></span>
+                </div>
+
+                <!-- DRIVE Knob -->
+                <div class="knob-container" id="knob-amp-drive" data-min="0" data-max="10" data-step="0.1" data-val="2.8" data-id="drive" data-label="DRIVE">
+                  <div class="knob-tooltip">2.8</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">DRIVE</div>
+                </div>
+
+                <!-- FREQ Knob (200Hz - 8KHz) -->
+                <div class="knob-container" id="knob-eq-freq" data-min="200" data-max="8000" data-step="50" data-val="1000" data-scale="freq" data-id="eqMidFreq" data-label="FREQ">
+                  <div class="knob-tooltip">1.0 kHz</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">FREQ</div>
+                  <span class="knob-sub-badge" id="btn-freq-mode">FREQ</span>
+                </div>
+              </div>
+
+              <!-- Amp Model Selector -->
+              <div style="display:flex; flex-direction:column; align-items:center;">
+                <div class="vertical-selector-matrix">
+                  <div class="selector-col">
+                    <div class="selector-row-item active" data-model="SMALL" onclick="selectAmp('SMALL')"><span>SMALL</span><span class="led-dot on"></span></div>
+                    <div class="selector-row-item" data-model="JC" onclick="selectAmp('JC')"><span>JC</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item" data-model="TWIN" onclick="selectAmp('TWIN')"><span>TWIN</span><span class="led-dot"></span></div>
+                  </div>
+                  <div class="selector-col">
+                    <div class="selector-row-item" data-model="ROTARY" onclick="selectAmp('ROTARY')"><span class="btn-red-pill">TO ROTARY</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item" data-model="LP_FILTER" onclick="selectAmp('LP_FILTER')"><span class="btn-boxed-text">LP FILTER</span><span class="led-dot"></span></div>
+                    <div class="selector-row-item" data-model="HP_FILTER" onclick="selectAmp('HP_FILTER')"><span class="btn-boxed-text">HP FILTER</span><span class="led-dot"></span></div>
+                  </div>
+                </div>
+                <div style="margin-top:6px;">
+                  <button class="tactile-btn" id="btn-amp-var">
+                    <span class="led-dot" id="led-amp-var"></span>
+                    <span class="btn-label-text">VARIATION ▼</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Upper ON Rocker Switch -->
+              <div class="rocker-wrapper">
+                <span class="rocker-label">ON</span>
+                <span class="led-dot on" id="led-amp-on2"></span>
+                <div class="rocker-switch on" id="sw-amp-on" onclick="toggleSwitch('amp')">
+                  <div class="rocker-paddle"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Row: 3 EQ Knobs (-15 to +15 dB) -->
+            <div style="display:flex; justify-content:space-around; align-items:center; padding-top:6px;">
+              <!-- BASS Knob -->
+              <div class="knob-container" id="knob-eq-bass" data-min="-15" data-max="15" data-step="0.5" data-val="0" data-scale="eq" data-unit="dB" data-id="eqBass" data-label="BASS">
+                <div class="knob-tooltip">0.0 dB</div>
+                <div class="knob-dial-assembly">
+                  <div class="midi-badge-dot"></div>
+                  <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                </div>
+                <div class="knob-label">BASS</div>
+              </div>
+
+              <!-- MID Knob -->
+              <div class="knob-container" id="knob-eq-mid" data-min="-15" data-max="15" data-step="0.5" data-val="0" data-scale="eq" data-unit="dB" data-id="eqMid" data-label="MID">
+                <div class="knob-tooltip">0.0 dB</div>
+                <div class="knob-dial-assembly">
+                  <div class="midi-badge-dot"></div>
+                  <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                </div>
+                <div class="knob-label">MID</div>
+                <span class="knob-sub-badge" id="btn-mid-res">RES</span>
+              </div>
+
+              <!-- TREBLE Knob -->
+              <div class="knob-container" id="knob-eq-treble" data-min="-15" data-max="15" data-step="0.5" data-val="0" data-scale="eq" data-unit="dB" data-id="eqTreble" data-label="TREBLE">
+                <div class="knob-tooltip">0.0 dB</div>
+                <div class="knob-dial-assembly">
+                  <div class="midi-badge-dot"></div>
+                  <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                </div>
+                <div class="knob-label">TREBLE</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================
+             RIGHT COLUMN: DELAY, COMP, REVERB
+             ============================================================ -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          
+          <!-- 1. DELAY -->
+          <div class="section-box" id="sec-delay" style="flex:1;">
+            <div class="section-cutout-title">DELAY</div>
+            <div style="display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:start; margin-top:2px;">
+              
+              <!-- Left: TEMPO + MST CLK + TAP/SET + ANALOG -->
+              <div style="display:flex; flex-direction:column; align-items:center;">
+                <div class="knob-container" id="knob-delay-tempo" data-min="0" data-max="10" data-step="0.1" data-val="4.2" data-id="delayTempo" data-label="TEMPO">
+                  <div class="knob-tooltip">4.2</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">TEMPO</div>
+                </div>
+                <div style="display:flex; gap:4px; align-items:center; margin-top:4px;">
+                  <span class="led-dot on" id="led-delay-mstclk"></span>
+                  <span class="btn-red-pill" id="btn-delay-mstclk" style="cursor:pointer;">MST CLK</span>
+                </div>
+                <!-- TAP/SET & ANALOG -->
+                <div style="margin-top:6px; display:flex; flex-direction:column; align-items:center; gap:4px; background:#161920; padding:4px 6px; border-radius:4px; border:1px solid #374151;">
+                  <button class="tactile-btn" id="btn-delay-tap" onclick="handleTapTempo()">
+                    <span class="led-dot on" id="led-delay-tap"></span>
+                    <span class="btn-label-text">TAP/SET ▼</span>
+                  </button>
+                  <div style="display:flex; gap:4px; align-items:center; cursor:pointer;" onclick="toggleDelayAnalog()">
+                    <span class="led-dot amber on" id="led-delay-analog"></span>
+                    <span style="font-size:7px; font-weight:800; color:#cbd5e1;">ANALOG ▼</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Center: EFFECTS Matrix + DRY/WET Knob -->
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:space-between; height:100%;">
+                <div style="background:#171a22; border:1px solid #374151; border-radius:4px; padding:4px 8px; width:100%;">
+                  <div style="font-size:8px; font-weight:900; text-align:center; color:#cbd5e1; margin-bottom:4px;">EFFECTS</div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <div style="display:flex; flex-direction:column; gap:3px;">
+                      <div class="selector-row-item" data-deff="CHOR" onclick="selectDelayEff('CHOR')"><span>CHOR</span><span class="led-dot"></span></div>
+                      <div class="selector-row-item" data-deff="VIBE" onclick="selectDelayEff('VIBE')"><span>VIBE</span><span class="led-dot"></span></div>
+                      <div class="selector-row-item" data-deff="ENS" onclick="selectDelayEff('ENS')"><span>ENS</span><span class="led-dot"></span></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:3px; align-items:flex-end;">
+                      <div class="selector-row-item" data-deff="FLAM" onclick="selectDelayEff('FLAM')"><span>FLAM</span><span class="led-dot"></span></div>
+                      <div class="selector-row-item active" data-deff="SPACE" onclick="selectDelayEff('SPACE')"><span>SPACE</span><span class="led-dot on"></span></div>
+                    </div>
+                  </div>
+                  <div style="display:flex; justify-content:center; gap:4px; align-items:center; margin-top:4px; border-top:1px solid #2d3748; padding-top:4px;">
+                    <span class="led-dot" id="led-delay-var"></span>
+                    <span class="btn-label-text" style="cursor:pointer;">VARIATION ▼</span>
+                  </div>
+                </div>
+
+                <div class="knob-container" id="knob-delay-drywet" data-min="0" data-max="10" data-step="0.1" data-val="3.5" data-id="delayDryWet" data-label="DRY  WET" style="margin-top:6px;">
+                  <div class="knob-tooltip">3.5</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">DRY  WET</div>
+                  <div style="margin-top:2px;"><span class="led-dot on" id="led-delay-drywet"></span></div>
+                </div>
+              </div>
+
+              <!-- Right: FEEDBACK + FILTER (HP/BP/LP) + PING PONG + ON / GLOBAL -->
+              <div style="display:flex; flex-direction:column; align-items:center;">
+                <div class="knob-container" id="knob-delay-feedback" data-min="0" data-max="10" data-step="0.1" data-val="4.8" data-id="delayFeedback" data-label="FEEDBACK">
+                  <div class="knob-tooltip">4.8</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">FEEDBACK</div>
+                  <div style="margin-top:2px;"><span class="led-dot on" id="led-delay-fb"></span></div>
+                </div>
+
+                <!-- FILTER HP / BP / LP -->
+                <div style="background:#171a22; border:1px solid #374151; border-radius:3px; padding:2px 6px; margin-top:4px; width:100%;">
+                  <div style="font-size:7px; font-weight:900; text-align:center; color:#94a3b8;">FILTER</div>
+                  <div style="display:flex; justify-content:space-between; gap:4px; margin-top:1px;">
+                    <span class="selector-row-item" data-dfilt="HP" onclick="selectDelayFilter('HP')"><span>HP</span><span class="led-dot"></span></span>
+                    <span class="selector-row-item" data-dfilt="BP" onclick="selectDelayFilter('BP')"><span>BP</span><span class="led-dot"></span></span>
+                    <span class="selector-row-item active" data-dfilt="LP" onclick="selectDelayFilter('LP')"><span>LP</span><span class="led-dot on"></span></span>
+                  </div>
+                </div>
+
+                <!-- PING PONG -->
+                <div style="margin-top:4px;">
+                  <button class="tactile-btn" id="btn-delay-pingpong" onclick="toggleDelayPingPong()">
+                    <span class="led-dot on" id="led-delay-pingpong"></span>
+                    <span class="btn-label-text">PING PONG ▼</span>
+                  </button>
+                </div>
+
+                <!-- Switch ON & GLOBAL -->
+                <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                  <div class="rocker-switch horizontal on" id="sw-delay-on" onclick="toggleSwitch('delay')">
+                    <div class="rocker-paddle"></div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; align-items:center;">
+                    <span class="led-dot" id="led-delay-global"></span>
+                    <span class="btn-red-pill" id="btn-delay-global" style="cursor:pointer;" onclick="toggleDelayGlobal()">GLOBAL ▼</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Lower Right Row: COMP on Left, REVERB on Right -->
+          <div style="display:grid; grid-template-columns:1fr 1.35fr; gap:8px;">
+            
+            <!-- 2. COMP -->
+            <div class="section-box" id="sec-comp">
+              <div class="section-cutout-title">COMP</div>
+              <div style="display:flex; align-items:center; gap:4px; margin-top:2px;">
+                <span class="led-dot on" id="led-comp-active"></span>
+                <span style="font-size:7.5px; font-weight:800; color:#cbd5e1;">ACTIVE</span>
+              </div>
+
+              <!-- AMOUNT Knob -->
+              <div style="display:flex; flex-direction:column; align-items:center; margin:4px 0;">
+                <div class="knob-container" id="knob-comp-amount" data-min="0" data-max="10" data-step="0.1" data-val="3.6" data-id="compAmount" data-label="AMOUNT">
+                  <div class="knob-tooltip">3.6</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">AMOUNT</div>
+                </div>
+                <div style="display:flex; gap:4px; align-items:center; margin-top:3px; cursor:pointer;" onclick="toggleCompFast()">
+                  <span class="led-dot" id="led-comp-fast"></span>
+                  <span style="font-size:7px; font-weight:800; color:#cbd5e1;">FAST</span>
+                </div>
+              </div>
+
+              <!-- Switch & GLOBAL -->
+              <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #374151; padding-top:4px;">
+                <div style="display:flex; gap:4px; align-items:center;">
+                  <span style="font-size:7.5px; font-weight:800; color:#cbd5e1;">ON</span>
+                  <span class="led-dot on" id="led-comp-on"></span>
+                  <div class="rocker-switch horizontal on" id="sw-comp-on" onclick="toggleSwitch('comp')">
+                    <div class="rocker-paddle"></div>
+                  </div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                  <span class="led-dot" id="led-comp-global"></span>
+                  <span class="btn-red-pill" id="btn-comp-global" style="cursor:pointer;" onclick="toggleCompGlobal()">GLOBAL ▼</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. REVERB -->
+            <div class="section-box" id="sec-reverb">
+              <div class="section-cutout-title">REVERB</div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:2px;">
+                <!-- BRIGHT / DARK -->
+                <div style="display:flex; flex-direction:column; gap:3px;">
+                  <div style="display:flex; gap:3px; align-items:center;">
+                    <span class="led-dot on" id="led-reverb-bright"></span>
+                    <span style="font-size:7px; font-weight:800; color:#cbd5e1;">BRIGHT</span>
+                  </div>
+                  <div style="display:flex; gap:3px; align-items:center;">
+                    <span class="led-dot" id="led-reverb-dark"></span>
+                    <span style="font-size:7px; font-weight:800; color:#cbd5e1;">DARK</span>
+                  </div>
+                  <button class="tactile-btn" style="margin-top:2px;" onclick="toggleReverbTone()">
+                    <span class="btn-label-text">TONE ▼</span>
+                  </button>
+                </div>
+
+                <!-- ROOM/BOOTH/SPRING / STAGE/HALL/CATH -->
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                  <div class="vertical-selector-matrix">
+                    <div class="selector-col">
+                      <div class="selector-row-item" data-rev="ROOM" onclick="selectReverb('ROOM')"><span>ROOM</span><span class="led-dot"></span></div>
+                      <div class="selector-row-item" data-rev="BOOTH" onclick="selectReverb('BOOTH')"><span>BOOTH</span><span class="led-dot"></span></div>
+                      <div class="selector-row-item" data-rev="SPRING" onclick="selectReverb('SPRING')"><span>SPRING</span><span class="led-dot"></span></div>
+                    </div>
+                    <div class="selector-col">
+                      <div class="selector-row-item active" data-rev="STAGE" onclick="selectReverb('STAGE')"><span>STAGE</span><span class="led-dot on"></span></div>
+                      <div class="selector-row-item" data-rev="HALL" onclick="selectReverb('HALL')"><span>HALL</span><span class="led-dot"></span></div>
+                      <div class="selector-row-item" data-rev="CATH" onclick="selectReverb('CATH')"><span>CATH</span><span class="led-dot"></span></div>
+                    </div>
+                  </div>
+                  <button class="tactile-btn" style="margin-top:4px;" id="btn-reverb-chorale" onclick="toggleReverbChorale()">
+                    <span class="led-dot" id="led-reverb-chorale"></span>
+                    <span class="btn-label-text">VAR | CHORALE ▼</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bottom Row: DRY/WET + ON + GLOBAL -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid #374151; padding-top:4px; margin-top:4px;">
+                <div class="knob-container" id="knob-reverb-drywet" data-min="0" data-max="10" data-step="0.1" data-val="3.8" data-id="reverbDryWet" data-label="DRY  WET">
+                  <div class="knob-tooltip">3.8</div>
+                  <div class="knob-dial-assembly">
+                    <div class="midi-badge-dot"></div>
+                    <div class="knob-wheel"><div class="knob-pointer-line"></div><div class="knob-center-cap"></div></div>
+                  </div>
+                  <div class="knob-label">DRY  WET</div>
+                </div>
+
+                <div style="display:flex; gap:4px; align-items:center;">
+                  <span style="font-size:7.5px; font-weight:800; color:#cbd5e1;">ON</span>
+                  <span class="led-dot on" id="led-reverb-on"></span>
+                  <div class="rocker-switch horizontal on" id="sw-reverb-on" onclick="toggleSwitch('reverb')">
+                    <div class="rocker-paddle"></div>
+                  </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                  <span class="led-dot" id="led-reverb-global"></span>
+                  <span class="btn-red-pill" id="btn-reverb-global" style="cursor:pointer;" onclick="toggleReverbGlobal()">GLOBAL ▼</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ============================================================
+           INTEGRATED REAL-TIME TEST AUDIO PLAYER & DSP DOCK
+           ============================================================ -->
+      <div class="audio-player-dock">
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="led-dot green on" id="led-audio-engine"></span>
+            <span style="font-size:9.5px; font-weight:800; color:#e2e8f0; letter-spacing:0.05em;">
+              WEB AUDIO REAL-TIME DSP ENGINE (6 MÓDULOS ATIVOS)
+            </span>
+          </div>
+          <span style="font-size:8px; color:#94a3b8;">
+            * Clique com o botão direito em qualquer Knob ou Botão para ativar o <b style="color:#f59e0b;">MIDI Learn</b>.
+          </span>
+        </div>
+
+        <!-- Audio Source Buttons -->
+        <div class="player-btn-group">
+          <button class="audio-src-btn" id="btn-play-drums" onclick="toggleTestAudio('drums')">
+            <span>🥁 Beat Bateria</span>
+          </button>
+          <button class="audio-src-btn" id="btn-play-guitar" onclick="toggleTestAudio('guitar')">
+            <span>🎸 Riff Baixo Funk</span>
+          </button>
+          <button class="audio-src-btn" id="btn-play-chords" onclick="toggleTestAudio('chords')">
+            <span>🎹 Acordes Synth</span>
+          </button>
+          <button class="audio-src-btn" id="btn-play-mic" onclick="toggleTestAudio('mic')">
+            <span>🎙 Mic ao Vivo</span>
+          </button>
+          <label class="audio-src-btn" style="margin:0;">
+            <span>📂 Subir Áudio</span>
+            <input type="file" id="file-audio-upload" accept="audio/*" style="display:none;" onchange="handleAudioUpload(this)">
+          </label>
+          <button class="audio-src-btn" id="btn-audio-stop" onclick="stopTestAudio()" style="background:#450a0a; border-color:#991b1b; color:#fca5a5;">
+            <span>⏹ Parar</span>
+          </button>
+        </div>
+
+        <!-- Realtime Spectrum Canvas -->
+        <canvas class="visualizer-canvas" id="canvas-visualizer" width="160" height="30"></canvas>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================================================================
+       FLOATING MIDI LEARN DIALOG MODAL
+       ================================================================ -->
+  <div class="midi-modal-overlay" id="midi-modal">
+    <div class="midi-modal-card">
+      <h3 id="midi-modal-title">MIDI LEARN: RATE</h3>
+      <p style="font-size:10px; color:#cbd5e1;">
+        Gire um knob ou mova um fader no seu controlador MIDI conectado para mapear automaticamente este parâmetro.
+      </p>
+
+      <div class="midi-pulse-box" id="midi-modal-status">
+        [ AGUARDANDO COMANDO MIDI CC... ]
+      </div>
+
+      <div style="font-size:9px; color:#94a3b8; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <span>Ou selecione manualmente:</span>
+        <select id="midi-manual-select" style="background:#0f172a; color:#fff; border:1px solid #475569; border-radius:3px; padding:2px 6px; font-size:10px;">
+          <!-- 0 to 127 options generated via JS -->
+        </select>
+      </div>
+
+      <div class="midi-modal-actions">
+        <button onclick="bindManualMidi()">Confirmar CC</button>
+        <button onclick="unbindMidi()" style="background:#7f1d1d; border-color:#ef4444;">Desvincular</button>
+        <button onclick="closeMidiModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       EMBEDDED WEB AUDIO API DSP, KNOB LOGIC, & MIDI ENGINE
+       ================================================================ -->
+  <script>
+    // --- 1. STATE & PARAMS ---
+    const state = {
+      // Mod 1
+      mod1On: true,
+      mod1Rate: 4.0,
+      mod1Amount: 5.5,
+      mod1Type: 'TREM',
+      mod1Sens: false,
+      mod1MstClk: true,
+      mod1Var: false,
+      mod1Ped: false,
+
+      // Mod 2
+      mod2On: true,
+      mod2Rate: 3.2,
+      mod2Amount: 6.5,
+      mod2Type: 'CHOR',
+      mod2Var: false,
+
+      // Amp Sim & EQ
+      ampOn: true,
+      drive: 2.8,
+      eqMidFreq: 1000,
+      eqBass: 0,
+      eqMid: 0,
+      eqTreble: 0,
+      ampModel: 'SMALL',
+
+      // Delay
+      delayOn: true,
+      delayTempo: 4.2,
+      delayDryWet: 3.5,
+      delayFeedback: 4.8,
+      delayAnalog: true,
+      delayPingPong: true,
+      delayFilter: 'LP',
+      delayEffect: 'SPACE',
+      delayGlobal: false,
+
+      // Compressor
+      compOn: true,
+      compAmount: 3.6,
+      compFast: false,
+      compGlobal: false,
+
+      // Reverb
+      reverbOn: true,
+      reverbDryWet: 3.8,
+      reverbType: 'STAGE',
+      reverbBright: true,
+      reverbChorale: false,
+      reverbGlobal: false
+    };
+
+    // MIDI Learn Mapping storage
+    let midiMappings = {};
+    try {
+      const saved = localStorage.getItem('nord_layer_effects_midi');
+      if (saved) midiMappings = JSON.parse(saved);
+    } catch(e) {}
+
+    let activeMidiTarget = null; // { id, label }
+
+    // --- 2. WEB AUDIO API DSP ENGINE ---
+    let audioCtx = null;
+    let analyzer = null;
+    let testAudioSource = 'none';
+    let testInterval = null;
+    let micStream = null;
+    let uploadedSource = null;
+    let noiseBuffer = null;
+
+    // Audio DSP Nodes
+    let inputBus, outputBus, masterGain;
+    let mod1Gain, mod1Panner, mod1Lfo, mod1LfoGain;
+    let mod2DelayL, mod2DelayR, mod2Wet, mod2Lfo, mod2LfoGain;
+    let waveShaperNode, eqBassFilter, eqMidFilter, eqTrebleFilter;
+    let delayL, delayR, delayFbL, delayFbR, delayFilterNode, delayWetNode;
+    let compressorNode, reverbConvolver, reverbWetNode, reverbDamping;
+
+    function initAudio() {
+      if (audioCtx) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return;
+      }
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass({ latencyHint: 'interactive' });
+
+      analyzer = audioCtx.createAnalyser();
+      analyzer.fftSize = 256;
+
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.9;
+      masterGain.connect(analyzer);
+      analyzer.connect(audioCtx.destination);
+
+      inputBus = audioCtx.createGain();
+
+      // --- MOD 1 CHAIN (Tremolo / Pan / Wah) ---
+      mod1Gain = audioCtx.createGain();
+      mod1Panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : audioCtx.createGain();
+      mod1Lfo = audioCtx.createOscillator();
+      mod1LfoGain = audioCtx.createGain();
+      mod1Lfo.frequency.value = state.mod1Rate;
+      mod1LfoGain.gain.value = (state.mod1Amount / 10) * 0.7;
+      mod1Lfo.connect(mod1LfoGain);
+      mod1LfoGain.connect(mod1Gain.gain);
+      mod1Lfo.start();
+
+      inputBus.connect(mod1Gain);
+      mod1Gain.connect(mod1Panner);
+
+      // --- MOD 2 CHAIN (Chorus / Flange) ---
+      const mod2Dry = audioCtx.createGain();
+      mod2Wet = audioCtx.createGain();
+      mod2Wet.gain.value = state.mod2On ? (state.mod2Amount / 10) * 0.8 : 0;
+      mod2DelayL = audioCtx.createDelay(0.1);
+      mod2DelayR = audioCtx.createDelay(0.1);
+      mod2DelayL.delayTime.value = 0.015;
+      mod2DelayR.delayTime.value = 0.022;
+
+      mod2Lfo = audioCtx.createOscillator();
+      mod2LfoGain = audioCtx.createGain();
+      mod2Lfo.frequency.value = (state.mod2Rate / 10) * 4.0;
+      mod2LfoGain.gain.value = 0.003;
+      mod2Lfo.connect(mod2LfoGain);
+      mod2LfoGain.connect(mod2DelayL.delayTime);
+      mod2Lfo.start();
+
+      mod1Panner.connect(mod2Dry);
+      mod1Panner.connect(mod2DelayL);
+      mod1Panner.connect(mod2DelayR);
+      mod2DelayL.connect(mod2Wet);
+      mod2DelayR.connect(mod2Wet);
+
+      const mod2Out = audioCtx.createGain();
+      mod2Dry.connect(mod2Out);
+      mod2Wet.connect(mod2Out);
+
+      // --- AMP SIM & 3-BAND EQ ---
+      waveShaperNode = audioCtx.createWaveShaper();
+      updateDriveCurve(state.drive);
+
+      eqBassFilter = audioCtx.createBiquadFilter();
+      eqBassFilter.type = 'lowshelf';
+      eqBassFilter.frequency.value = 100;
+      eqBassFilter.gain.value = state.eqBass;
+
+      eqMidFilter = audioCtx.createBiquadFilter();
+      eqMidFilter.type = 'peaking';
+      eqMidFilter.frequency.value = state.eqMidFreq;
+      eqMidFilter.Q.value = 1.2;
+      eqMidFilter.gain.value = state.eqMid;
+
+      eqTrebleFilter = audioCtx.createBiquadFilter();
+      eqTrebleFilter.type = 'highshelf';
+      eqTrebleFilter.frequency.value = 4500;
+      eqTrebleFilter.gain.value = state.eqTreble;
+
+      mod2Out.connect(waveShaperNode);
+      waveShaperNode.connect(eqBassFilter);
+      eqBassFilter.connect(eqMidFilter);
+      eqMidFilter.connect(eqTrebleFilter);
+
+      // --- DELAY (Stereo Ping-Pong) ---
+      const delayDry = audioCtx.createGain();
+      delayWetNode = audioCtx.createGain();
+      delayWetNode.gain.value = state.delayOn ? (state.delayDryWet / 10) * 0.7 : 0;
+
+      delayL = audioCtx.createDelay(2.0);
+      delayR = audioCtx.createDelay(2.0);
+      const tempoSeconds = (state.delayTempo / 10) * 0.7 + 0.08;
+      delayL.delayTime.value = tempoSeconds;
+      delayR.delayTime.value = state.delayPingPong ? tempoSeconds * 1.5 : tempoSeconds;
+
+      delayFbL = audioCtx.createGain();
+      delayFbR = audioCtx.createGain();
+      const fbAmount = Math.min(0.9, (state.delayFeedback / 10) * 0.85);
+      delayFbL.gain.value = fbAmount;
+      delayFbR.gain.value = fbAmount;
+
+      delayFilterNode = audioCtx.createBiquadFilter();
+      delayFilterNode.type = 'lowpass';
+      delayFilterNode.frequency.value = state.delayAnalog ? 2800 : 7000;
+
+      eqTrebleFilter.connect(delayDry);
+      eqTrebleFilter.connect(delayL);
+
+      delayL.connect(delayFilterNode);
+      delayFilterNode.connect(delayFbL);
+      if (state.delayPingPong) {
+        delayFbL.connect(delayR);
+        delayR.connect(delayFbR);
+        delayFbR.connect(delayL);
+      } else {
+        delayFbL.connect(delayL);
+      }
+      delayL.connect(delayWetNode);
+      delayR.connect(delayWetNode);
+
+      const delayOut = audioCtx.createGain();
+      delayDry.connect(delayOut);
+      delayWetNode.connect(delayOut);
+
+      // --- COMPRESSOR ---
+      compressorNode = audioCtx.createDynamicsCompressor();
+      compressorNode.threshold.value = -12 - (state.compAmount * 2.5);
+      compressorNode.knee.value = 15;
+      compressorNode.ratio.value = 2 + state.compAmount * 1.5;
+      compressorNode.attack.value = state.compFast ? 0.003 : 0.03;
+      compressorNode.release.value = 0.25;
+
+      delayOut.connect(compressorNode);
+
+      // --- REVERB ---
+      const reverbDry = audioCtx.createGain();
+      reverbWetNode = audioCtx.createGain();
+      reverbWetNode.gain.value = state.reverbOn ? (state.reverbDryWet / 10) * 0.65 : 0;
+
+      reverbConvolver = audioCtx.createConvolver();
+      reverbConvolver.buffer = buildReverbImpulse(audioCtx, state.reverbType, state.reverbBright);
+
+      reverbDamping = audioCtx.createBiquadFilter();
+      reverbDamping.type = 'lowpass';
+      reverbDamping.frequency.value = state.reverbBright ? 8000 : 3200;
+
+      compressorNode.connect(reverbDry);
+      compressorNode.connect(reverbConvolver);
+      reverbConvolver.connect(reverbDamping);
+      reverbDamping.connect(reverbWetNode);
+
+      reverbDry.connect(masterGain);
+      reverbWetNode.connect(masterGain);
+
+      // Build noise buffer
+      generateNoise();
+      startVisualizer();
+    }
+
+    function generateNoise() {
+      if (!audioCtx) return;
+      const bSize = audioCtx.sampleRate * 2;
+      noiseBuffer = audioCtx.createBuffer(1, bSize, audioCtx.sampleRate);
+      const out = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bSize; i++) out[i] = Math.random() * 2 - 1;
+    }
+
+    function updateDriveCurve(val) {
+      if (!audioCtx || !waveShaperNode) return;
+      const k = val * 8;
+      const n = 2048;
+      const curve = new Float32Array(n);
+      const deg = Math.PI / 180;
+      for (let i = 0; i < n; ++i) {
+        const x = (i * 2) / n - 1;
+        if (k === 0) curve[i] = x;
+        else curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+      }
+      waveShaperNode.curve = curve;
+    }
+
+    function buildReverbImpulse(ctx, type, bright) {
+      const rate = ctx.sampleRate;
+      let len = 2.0;
+      if (type === 'ROOM' || type === 'BOOTH') len = 1.2;
+      else if (type === 'CATH' || type === 'HALL') len = 3.5;
+      else if (type === 'SPRING') len = 1.8;
+
+      const numChannels = 2;
+      const numSamples = Math.floor(rate * len);
+      const impulse = ctx.createBuffer(numChannels, numSamples, rate);
+
+      for (let c = 0; c < numChannels; c++) {
+        const channelData = impulse.getChannelData(c);
+        const decayBase = bright ? 2.5 : 4.0;
+        for (let i = 0; i < numSamples; i++) {
+          const t = i / numSamples;
+          const noise = Math.random() * 2 - 1;
+          channelData[i] = noise * Math.exp(-t * decayBase);
+        }
+      }
+      return impulse;
+    }
+
+    // --- 3. TEST AUDIO SOURCES ---
+    function toggleTestAudio(source) {
+      initAudio();
+      if (testAudioSource === source) {
+        stopTestAudio();
+        return;
+      }
+      stopTestAudio();
+
+      testAudioSource = source;
+      document.querySelectorAll('.audio-src-btn').forEach(b => b.classList.remove('active'));
+
+      if (source === 'drums') {
+        document.getElementById('btn-play-drums').classList.add('active');
+        playDrumsRoutine();
+      } else if (source === 'guitar') {
+        document.getElementById('btn-play-guitar').classList.add('active');
+        playGuitarRoutine();
+      } else if (source === 'chords') {
+        document.getElementById('btn-play-chords').classList.add('active');
+        playChordsRoutine();
+      } else if (source === 'mic') {
+        document.getElementById('btn-play-mic').classList.add('active');
+        startMic();
+      }
+    }
+
+    function stopTestAudio() {
+      if (testInterval) {
+        clearInterval(testInterval);
+        testInterval = null;
+      }
+      if (micStream) {
+        micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+      }
+      if (uploadedSource) {
+        try { uploadedSource.stop(); } catch(e){}
+        uploadedSource = null;
+      }
+      testAudioSource = 'none';
+      document.querySelectorAll('.audio-src-btn').forEach(b => b.classList.remove('active'));
+    }
+
+    function playDrumsRoutine() {
+      let step = 0;
+      const bpm = 105;
+      const ms = (60 / bpm / 4) * 1000;
+
+      const tick = () => {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        if ([0, 6, 8, 10].includes(step)) triggerKick(now);
+        if ([4, 12].includes(step)) triggerSnare(now);
+        if ([0, 2, 4, 6, 8, 10, 12].includes(step)) triggerHat(now, false);
+        if (step === 14) triggerHat(now, true);
+        step = (step + 1) % 16;
+      };
+      tick();
+      testInterval = setInterval(tick, ms);
+    }
+
+    function triggerKick(t) {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.frequency.setValueAtTime(140, t);
+      osc.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+      g.gain.setValueAtTime(0.85, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.connect(g);
+      g.connect(inputBus);
+      osc.start(t);
+      osc.stop(t + 0.28);
+    }
+
+    function triggerSnare(t) {
+      if (!noiseBuffer) return;
+      const n = audioCtx.createBufferSource();
+      n.buffer = noiseBuffer;
+      const f = audioCtx.createBiquadFilter();
+      f.type = 'highpass';
+      f.frequency.value = 850;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.5, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      n.connect(f);
+      f.connect(g);
+      g.connect(inputBus);
+      n.start(t);
+      n.stop(t + 0.22);
+    }
+
+    function triggerHat(t, open) {
+      if (!noiseBuffer) return;
+      const n = audioCtx.createBufferSource();
+      n.buffer = noiseBuffer;
+      const f = audioCtx.createBiquadFilter();
+      f.type = 'highpass';
+      f.frequency.value = 7500;
+      const g = audioCtx.createGain();
+      const dur = open ? 0.3 : 0.05;
+      g.gain.setValueAtTime(open ? 0.35 : 0.2, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      n.connect(f);
+      f.connect(g);
+      g.connect(inputBus);
+      n.start(t);
+      n.stop(t + dur + 0.02);
+    }
+
+    function playGuitarRoutine() {
+      // Slap Bass / Funk Guitar Riff
+      const notes = [
+        { f: 73.4, dur: 0.2, off: 0 },
+        { f: 73.4, dur: 0.15, off: 0.3 },
+        { f: 87.3, dur: 0.18, off: 0.6 },
+        { f: 98.0, dur: 0.25, off: 0.9 },
+        { f: 110.0, dur: 0.2, off: 1.2 },
+        { f: 130.8, dur: 0.3, off: 1.5 },
+        { f: 146.8, dur: 0.35, off: 1.8 }
+      ];
+      const cycle = () => {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        notes.forEach(n => {
+          const t = now + n.off;
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          osc1.type = 'sawtooth';
+          osc2.type = 'square';
+          osc1.frequency.setValueAtTime(n.f, t);
+          osc2.frequency.setValueAtTime(n.f * 1.004, t);
+
+          const f = audioCtx.createBiquadFilter();
+          f.type = 'lowpass';
+          f.Q.value = 5;
+          f.frequency.setValueAtTime(n.f * 5, t);
+          f.frequency.exponentialRampToValueAtTime(n.f * 1.2, t + n.dur);
+
+          const g = audioCtx.createGain();
+          g.gain.setValueAtTime(0.4, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + n.dur + 0.04);
+
+          osc1.connect(f);
+          osc2.connect(f);
+          f.connect(g);
+          g.connect(inputBus);
+
+          osc1.start(t);
+          osc2.start(t);
+          osc1.stop(t + n.dur + 0.05);
+          osc2.stop(t + n.dur + 0.05);
+        });
+      };
+      cycle();
+      testInterval = setInterval(cycle, 2200);
+    }
+
+    function playChordsRoutine() {
+      // Neo-Soul chords
+      const chords = [
+        [146.8, 174.6, 220.0, 261.6, 329.6], // Dm9
+        [123.5, 174.6, 246.9, 329.6],        // G13
+        [130.8, 164.8, 196.0, 246.9, 293.7], // Cmaj9
+        [110.0, 174.6, 277.2, 349.2]         // A7alt
+      ];
+      let idx = 0;
+      const playNext = () => {
+        if (!audioCtx) return;
+        const chord = chords[idx];
+        const now = audioCtx.currentTime;
+        chord.forEach(f => {
+          const osc = audioCtx.createOscillator();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, now);
+
+          const flt = audioCtx.createBiquadFilter();
+          flt.type = 'lowpass';
+          flt.frequency.setValueAtTime(2800, now);
+
+          const g = audioCtx.createGain();
+          g.gain.setValueAtTime(0.001, now);
+          g.gain.linearRampToValueAtTime(0.12, now + 0.08);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+
+          osc.connect(flt);
+          flt.connect(g);
+          g.connect(inputBus);
+
+          osc.start(now);
+          osc.stop(now + 2.1);
+        });
+        idx = (idx + 1) % chords.length;
+      };
+      playNext();
+      testInterval = setInterval(playNext, 2200);
+    }
+
+    async function startMic() {
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const src = audioCtx.createMediaStreamSource(micStream);
+        src.connect(inputBus);
+      } catch(e) {
+        alert("Acesso ao microfone não autorizado ou indisponível.");
+        stopTestAudio();
+      }
+    }
+
+    async function handleAudioUpload(input) {
+      if (!input.files || !input.files[0]) return;
+      initAudio();
+      stopTestAudio();
+      const file = input.files[0];
+      try {
+        const ab = await file.arrayBuffer();
+        const buf = await audioCtx.decodeAudioData(ab);
+        uploadedSource = audioCtx.createBufferSource();
+        uploadedSource.buffer = buf;
+        uploadedSource.loop = true;
+        uploadedSource.connect(inputBus);
+        uploadedSource.start(0);
+        testAudioSource = 'file';
+        document.querySelectorAll('.audio-src-btn').forEach(b => b.classList.remove('active'));
+      } catch(e) {
+        alert("Erro ao decodificar arquivo de áudio.");
+      }
+    }
+
+    function startVisualizer() {
+      const canvas = document.getElementById('canvas-visualizer');
+      const ctx = canvas.getContext('2d');
+      const dataArray = new Uint8Array(analyzer.frequencyBinCount);
+
+      const draw = () => {
+        requestAnimationFrame(draw);
+        analyzer.getByteFrequencyData(dataArray);
+
+        ctx.fillStyle = '#0d1015';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / 24);
+        let x = 0;
+
+        for (let i = 0; i < 24; i++) {
+          const val = dataArray[i * 2] / 255.0;
+          const barHeight = val * (canvas.height - 4);
+
+          // Green to yellow to red VU gradient
+          if (val > 0.8) ctx.fillStyle = '#ef4444';
+          else if (val > 0.5) ctx.fillStyle = '#f59e0b';
+          else ctx.fillStyle = '#10b981';
+
+          ctx.fillRect(x + 1, canvas.height - barHeight - 2, barWidth - 2, barHeight);
+          x += barWidth;
+        }
+      };
+      draw();
+    }
+
+    // --- 4. HARDWARE CONTROLS LOGIC & UPDATE DISPATCH ---
+    function updateParam(id, val) {
+      state[id] = val;
+
+      if (!audioCtx) return;
+
+      // Update Web Audio nodes in real-time
+      if (id === 'mod1Rate' && mod1Lfo) mod1Lfo.frequency.value = val;
+      if (id === 'mod1Amount' && mod1LfoGain) mod1LfoGain.gain.value = (val / 10) * 0.7;
+
+      if (id === 'mod2Rate' && mod2Lfo) mod2Lfo.frequency.value = (val / 10) * 4.0;
+      if (id === 'mod2Amount' && mod2Wet) mod2Wet.gain.value = state.mod2On ? (val / 10) * 0.8 : 0;
+
+      if (id === 'drive') updateDriveCurve(val);
+      if (id === 'eqMidFreq' && eqMidFilter) eqMidFilter.frequency.value = val;
+      if (id === 'eqBass' && eqBassFilter) eqBassFilter.gain.value = val;
+      if (id === 'eqMid' && eqMidFilter) eqMidFilter.gain.value = val;
+      if (id === 'eqTreble' && eqTrebleFilter) eqTrebleFilter.gain.value = val;
+
+      if (id === 'delayTempo' && delayL && delayR) {
+        const sec = (val / 10) * 0.7 + 0.08;
+        delayL.delayTime.value = sec;
+        delayR.delayTime.value = state.delayPingPong ? sec * 1.5 : sec;
+      }
+      if (id === 'delayFeedback' && delayFbL && delayFbR) {
+        const fb = Math.min(0.9, (val / 10) * 0.85);
+        delayFbL.gain.value = fb;
+        delayFbR.gain.value = fb;
+      }
+      if (id === 'delayDryWet' && delayWetNode) {
+        delayWetNode.gain.value = state.delayOn ? (val / 10) * 0.7 : 0;
+      }
+
+      if (id === 'compAmount' && compressorNode) {
+        compressorNode.threshold.value = -12 - (val * 2.5);
+        compressorNode.ratio.value = 2 + val * 1.5;
+      }
+
+      if (id === 'reverbDryWet' && reverbWetNode) {
+        reverbWetNode.gain.value = state.reverbOn ? (val / 10) * 0.65 : 0;
+      }
+    }
+
+    // Rocker switches
+    function toggleSwitch(module) {
+      initAudio();
+      if (module === 'mod1') {
+        state.mod1On = !state.mod1On;
+        document.getElementById('sw-mod1-on').classList.toggle('on', state.mod1On);
+        document.getElementById('led-mod1-on').classList.toggle('on', state.mod1On);
+        if (mod1Gain) mod1Gain.gain.value = state.mod1On ? 1.0 : 0.0;
+      } else if (module === 'mod2') {
+        state.mod2On = !state.mod2On;
+        document.getElementById('sw-mod2-on').classList.toggle('on', state.mod2On);
+        document.getElementById('led-mod2-on').classList.toggle('on', state.mod2On);
+        if (mod2Wet) mod2Wet.gain.value = state.mod2On ? (state.mod2Amount / 10) * 0.8 : 0;
+      } else if (module === 'amp') {
+        state.ampOn = !state.ampOn;
+        document.getElementById('sw-amp-on').classList.toggle('on', state.ampOn);
+        document.getElementById('led-amp-on1').classList.toggle('on', state.ampOn);
+        document.getElementById('led-amp-on2').classList.toggle('on', state.ampOn);
+      } else if (module === 'delay') {
+        state.delayOn = !state.delayOn;
+        document.getElementById('sw-delay-on').classList.toggle('on', state.delayOn);
+        if (delayWetNode) delayWetNode.gain.value = state.delayOn ? (state.delayDryWet / 10) * 0.7 : 0;
+      } else if (module === 'comp') {
+        state.compOn = !state.compOn;
+        document.getElementById('sw-comp-on').classList.toggle('on', state.compOn);
+        document.getElementById('led-comp-on').classList.toggle('on', state.compOn);
+        document.getElementById('led-comp-active').classList.toggle('on', state.compOn);
+      } else if (module === 'reverb') {
+        state.reverbOn = !state.reverbOn;
+        document.getElementById('sw-reverb-on').classList.toggle('on', state.reverbOn);
+        document.getElementById('led-reverb-on').classList.toggle('on', state.reverbOn);
+        if (reverbWetNode) reverbWetNode.gain.value = state.reverbOn ? (state.reverbDryWet / 10) * 0.65 : 0;
+      }
+    }
+
+    // Selectors
+    function selectMod1(eff) {
+      state.mod1Type = eff;
+      document.querySelectorAll('#sec-mod1 .selector-row-item').forEach(el => {
+        const isMatch = el.getAttribute('data-eff') === eff;
+        el.classList.toggle('active', isMatch);
+        el.querySelector('.led-dot').classList.toggle('on', isMatch);
+      });
+    }
+
+    function selectMod2(eff) {
+      state.mod2Type = eff;
+      document.querySelectorAll('#sec-mod2 .selector-row-item').forEach(el => {
+        const isMatch = el.getAttribute('data-eff') === eff;
+        el.classList.toggle('active', isMatch);
+        el.querySelector('.led-dot').classList.toggle('on', isMatch);
+      });
+    }
+
+    function selectAmp(model) {
+      state.ampModel = model;
+      document.querySelectorAll('#sec-amp-eq .selector-row-item').forEach(el => {
+        const isMatch = el.getAttribute('data-model') === model;
+        el.classList.toggle('active', isMatch);
+        el.querySelector('.led-dot').classList.toggle('on', isMatch);
+      });
+    }
+
+    function selectDelayEff(eff) {
+      state.delayEffect = eff;
+      document.querySelectorAll('#sec-delay .selector-row-item[data-deff]').forEach(el => {
+        const isMatch = el.getAttribute('data-deff') === eff;
+        el.classList.toggle('active', isMatch);
+        el.querySelector('.led-dot').classList.toggle('on', isMatch);
+      });
+    }
+
+    function selectDelayFilter(f) {
+      state.delayFilter = f;
+      document.querySelectorAll('#sec-delay .selector-row-item[data-dfilt]').forEach(el => {
+        const isMatch = el.getAttribute('data-dfilt') === f;
+        el.classList.toggle('active', isMatch);
+        el.querySelector('.led-dot').classList.toggle('on', isMatch);
+      });
+      if (delayFilterNode) {
+        if (f === 'HP') delayFilterNode.type = 'highpass';
+        else if (f === 'BP') delayFilterNode.type = 'bandpass';
+        else delayFilterNode.type = 'lowpass';
+      }
+    }
+
+    function selectReverb(r) {
+      state.reverbType = r;
+      document.querySelectorAll('#sec-reverb .selector-row-item').forEach(el => {
+        const isMatch = el.getAttribute('data-rev') === r;
+        el.classList.toggle('active', isMatch);
+        el.querySelector('.led-dot').classList.toggle('on', isMatch);
+      });
+      if (audioCtx && reverbConvolver) {
+        reverbConvolver.buffer = buildReverbImpulse(audioCtx, r, state.reverbBright);
+      }
+    }
+
+    function toggleReverbTone() {
+      state.reverbBright = !state.reverbBright;
+      document.getElementById('led-reverb-bright').classList.toggle('on', state.reverbBright);
+      document.getElementById('led-reverb-dark').classList.toggle('on', !state.reverbBright);
+      if (audioCtx && reverbConvolver) {
+        reverbConvolver.buffer = buildReverbImpulse(audioCtx, state.reverbType, state.reverbBright);
+      }
+      if (reverbDamping) reverbDamping.frequency.value = state.reverbBright ? 8000 : 3200;
+    }
+
+    function toggleDelayPingPong() {
+      state.delayPingPong = !state.delayPingPong;
+      document.getElementById('led-delay-pingpong').classList.toggle('on', state.delayPingPong);
+    }
+
+    function toggleDelayAnalog() {
+      state.delayAnalog = !state.delayAnalog;
+      document.getElementById('led-delay-analog').classList.toggle('on', state.delayAnalog);
+      if (delayFilterNode) delayFilterNode.frequency.value = state.delayAnalog ? 2800 : 7000;
+    }
+
+    function toggleDelayGlobal() {
+      state.delayGlobal = !state.delayGlobal;
+      document.getElementById('led-delay-global').classList.toggle('on', state.delayGlobal);
+    }
+
+    function toggleCompFast() {
+      state.compFast = !state.compFast;
+      document.getElementById('led-comp-fast').classList.toggle('on', state.compFast);
+      if (compressorNode) compressorNode.attack.value = state.compFast ? 0.003 : 0.03;
+    }
+
+    function toggleCompGlobal() {
+      state.compGlobal = !state.compGlobal;
+      document.getElementById('led-comp-global').classList.toggle('on', state.compGlobal);
+    }
+
+    function toggleReverbGlobal() {
+      state.reverbGlobal = !state.reverbGlobal;
+      document.getElementById('led-reverb-global').classList.toggle('on', state.reverbGlobal);
+    }
+
+    function toggleReverbChorale() {
+      state.reverbChorale = !state.reverbChorale;
+      document.getElementById('led-reverb-chorale').classList.toggle('on', state.reverbChorale);
+    }
+
+    let lastTap = 0;
+    function handleTapTempo() {
+      const now = Date.now();
+      if (lastTap > 0) {
+        const diff = now - lastTap;
+        if (diff > 120 && diff < 2000) {
+          const val = Number((diff / 200).toFixed(1));
+          const clamped = Math.max(0, Math.min(10, val));
+          updateKnobVisual('knob-delay-tempo', clamped);
+        }
+      }
+      lastTap = now;
+      const led = document.getElementById('led-delay-tap');
+      led.classList.remove('on');
+      setTimeout(() => led.classList.add('on'), 80);
+    }
+
+    // --- 5. ROTARY KNOB COMPONENT INITIALIZATION ---
+    function setupKnobs() {
+      document.querySelectorAll('.knob-container').forEach(container => {
+        const min = parseFloat(container.getAttribute('data-min'));
+        const max = parseFloat(container.getAttribute('data-max'));
+        const step = parseFloat(container.getAttribute('data-step') || '0.1');
+        const paramId = container.getAttribute('data-id');
+        const scaleType = container.getAttribute('data-scale') || '0_to_10';
+        const unit = container.getAttribute('data-unit') || '';
+
+        // Build radial ticks
+        const assembly = container.querySelector('.knob-dial-assembly');
+        let ticks = [];
+        if (scaleType === '0_to_10') {
+          ticks = [
+            { l: '0', a: -135 }, { l: '1', a: -108 }, { l: '2', a: -81 }, { l: '3', a: -54 },
+            { l: '4', a: -27 }, { l: '5', a: 0 }, { l: '6', a: 27 }, { l: '7', a: 54 },
+            { l: '8', a: 81 }, { l: '9', a: 108 }, { l: '10', a: 135 }
+          ];
+        } else if (scaleType === 'eq') {
+          ticks = [
+            { l: '-15', a: -135 }, { l: '-10', a: -90 }, { l: '-5', a: -45 },
+            { l: '0', a: 0 }, { l: '5', a: 45 }, { l: '10', a: 90 }, { l: '15', a: 135 }
+          ];
+        } else if (scaleType === 'freq') {
+          ticks = [
+            { l: '200', a: -135 }, { l: '400', a: -67 }, { l: '1K', a: 0 },
+            { l: '4K', a: 67 }, { l: '8K', a: 135 }
+          ];
+        }
+
+        ticks.forEach(t => {
+          const span = document.createElement('span');
+          span.className = 'radial-tick';
+          span.innerText = t.l;
+          const rad = ((t.a - 90) * Math.PI) / 180;
+          const r = 21;
+          const cx = 26 + r * Math.cos(rad);
+          const cy = 26 + r * Math.sin(rad);
+          span.style.left = `${cx}px`;
+          span.style.top = `${cy}px`;
+          assembly.appendChild(span);
+        });
+
+        // Initial angle & value
+        const initialVal = parseFloat(container.getAttribute('data-val'));
+        applyKnobAngle(container, initialVal, min, max, unit);
+
+        // DRAG INTERACTIONS (Pointer Events)
+        let isDragging = false;
+        let startY = 0;
+        let startVal = initialVal;
+
+        container.addEventListener('pointerdown', e => {
+          if (e.button !== 0) return;
+          initAudio();
+          isDragging = true;
+          container.classList.add('dragging');
+          startY = e.clientY;
+          startVal = parseFloat(container.getAttribute('data-val'));
+          container.setPointerCapture(e.pointerId);
+          e.preventDefault();
+        });
+
+        container.addEventListener('pointermove', e => {
+          if (!isDragging) return;
+          const deltaY = startY - e.clientY;
+          const sens = e.shiftKey ? 0.001 : 0.005;
+          let newVal = startVal + deltaY * (max - min) * sens;
+          newVal = Math.max(min, Math.min(max, newVal));
+          newVal = Math.round(newVal / step) * step;
+          applyKnobAngle(container, newVal, min, max, unit);
+          updateParam(paramId, newVal);
+        });
+
+        const stopDrag = e => {
+          if (isDragging) {
+            isDragging = false;
+            container.classList.remove('dragging');
+            try { container.releasePointerCapture(e.pointerId); } catch(err){}
+          }
+        };
+        container.addEventListener('pointerup', stopDrag);
+        container.addEventListener('pointercancel', stopDrag);
+
+        // MOUSE WHEEL ADJUSTMENT
+        container.addEventListener('wheel', e => {
+          e.preventDefault();
+          initAudio();
+          const dir = -Math.sign(e.deltaY);
+          const curVal = parseFloat(container.getAttribute('data-val'));
+          const multiplier = e.shiftKey ? 1 : 2;
+          let newVal = curVal + dir * step * multiplier;
+          newVal = Math.max(min, Math.min(max, newVal));
+          newVal = Math.round(newVal / step) * step;
+          applyKnobAngle(container, newVal, min, max, unit);
+          updateParam(paramId, newVal);
+        }, { passive: false });
+
+        // DOUBLE CLICK TO RESET
+        container.addEventListener('dblclick', () => {
+          const defVal = (min + max) / 2;
+          applyKnobAngle(container, defVal, min, max, unit);
+          updateParam(paramId, defVal);
+        });
+
+        // RIGHT CLICK TO MIDI LEARN
+        container.addEventListener('contextmenu', e => {
+          e.preventDefault();
+          openMidiModal(paramId, container.getAttribute('data-label'));
+        });
+
+        // Update MIDI badge state if already mapped
+        updateMidiBadge(container, paramId);
+      });
+    }
+
+    function applyKnobAngle(container, val, min, max, unit) {
+      container.setAttribute('data-val', val);
+      const norm = Math.max(0, Math.min(1, (val - min) / (max - min)));
+      const angle = -135 + norm * 270;
+      const wheel = container.querySelector('.knob-wheel');
+      wheel.style.transform = `rotate(${angle}deg)`;
+
+      const tooltip = container.querySelector('.knob-tooltip');
+      if (tooltip) {
+        if (unit === 'dB') tooltip.innerText = `${val >= 0 ? '+' : ''}${val.toFixed(1)} dB`;
+        else if (val >= 1000) tooltip.innerText = `${(val / 1000).toFixed(1)} kHz`;
+        else tooltip.innerText = `${val.toFixed(1)}${unit ? ' ' + unit : ''}`;
+      }
+    }
+
+    function updateKnobVisual(containerId, val) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const min = parseFloat(container.getAttribute('data-min'));
+      const max = parseFloat(container.getAttribute('data-max'));
+      const unit = container.getAttribute('data-unit') || '';
+      const paramId = container.getAttribute('data-id');
+      applyKnobAngle(container, val, min, max, unit);
+      updateParam(paramId, val);
+    }
+
+    function updateMidiBadge(container, paramId) {
+      const badge = container.querySelector('.midi-badge-dot');
+      if (badge) {
+        badge.classList.toggle('visible', midiMappings[paramId] !== undefined);
+      }
+    }
+
+    // --- 6. MIDI LEARN & WEB MIDI API ---
+    function initWebMidi() {
+      if (navigator.requestMIDIAccess) {
+        navigator.requestMIDIAccess().then(access => {
+          for (const input of access.inputs.values()) {
+            input.onmidimessage = handleMidiMsg;
+          }
+          access.onstatechange = e => {
+            if (e.port.type === 'input' && e.port.state === 'connected') {
+              e.port.onmidimessage = handleMidiMsg;
+            }
+          };
+        }).catch(() => {});
+      }
+    }
+
+    function handleMidiMsg(e) {
+      const data = e.data;
+      if (!data) return;
+      const cmd = data[0] >> 4;
+      const cc = data[1];
+      const val = data[2];
+
+      if (cmd === 0xB) { // Control Change
+        // In Learn Mode?
+        if (activeMidiTarget) {
+          bindMidiCC(activeMidiTarget.id, cc);
+          return;
+        }
+
+        // Search mapped parameters
+        for (const [paramId, mappedCC] of Object.entries(midiMappings)) {
+          if (mappedCC === cc) {
+            const container = document.querySelector(`.knob-container[data-id="${paramId}"]`);
+            if (container) {
+              const min = parseFloat(container.getAttribute('data-min'));
+              const max = parseFloat(container.getAttribute('data-max'));
+              const scaled = min + (val / 127) * (max - min);
+              const step = parseFloat(container.getAttribute('data-step') || '0.1');
+              const finalVal = Math.round(scaled / step) * step;
+              applyKnobAngle(container, finalVal, min, max, container.getAttribute('data-unit') || '');
+              updateParam(paramId, finalVal);
+            }
+          }
+        }
+      }
+    }
+
+    function openMidiModal(paramId, label) {
+      activeMidiTarget = { id: paramId, label };
+      document.getElementById('midi-modal-title').innerText = `MIDI LEARN: ${label}`;
+      document.getElementById('midi-modal-status').innerText = `[ AGUARDANDO COMANDO MIDI CC... ]`;
+      document.getElementById('midi-modal').classList.add('open');
+    }
+
+    function closeMidiModal() {
+      activeMidiTarget = null;
+      document.getElementById('midi-modal').classList.remove('open');
+    }
+
+    function bindMidiCC(paramId, cc) {
+      midiMappings[paramId] = cc;
+      try { localStorage.setItem('nord_layer_effects_midi', JSON.stringify(midiMappings)); } catch(e){}
+      document.getElementById('midi-modal-status').innerText = `✓ MAPEADO COM SUCESSO PARA CC #${cc}!`;
+      setTimeout(() => {
+        closeMidiModal();
+        const container = document.querySelector(`.knob-container[data-id="${paramId}"]`);
+        if (container) updateMidiBadge(container, paramId);
+      }, 700);
+    }
+
+    function bindManualMidi() {
+      if (!activeMidiTarget) return;
+      const cc = parseInt(document.getElementById('midi-manual-select').value);
+      bindMidiCC(activeMidiTarget.id, cc);
+    }
+
+    function unbindMidi() {
+      if (!activeMidiTarget) return;
+      delete midiMappings[activeMidiTarget.id];
+      try { localStorage.setItem('nord_layer_effects_midi', JSON.stringify(midiMappings)); } catch(e){}
+      const container = document.querySelector(`.knob-container[data-id="${activeMidiTarget.id}"]`);
+      if (container) updateMidiBadge(container, activeMidiTarget.id);
+      closeMidiModal();
+    }
+
+    // Populate manual CC selector
+    const sel = document.getElementById('midi-manual-select');
+    for (let i = 0; i < 128; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.innerText = `CC #${i}`;
+      sel.appendChild(opt);
+    }
+
+    // Initialize all controls on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setupKnobs();
+      initWebMidi();
+    });
+  </script>
+</body>
+</html>

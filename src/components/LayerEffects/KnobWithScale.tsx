@@ -3,13 +3,14 @@
  * Accurately replicates the Nord Stage 4 rotary potentiometers:
  * - Radial silk-screened markings (0-10, -15 to +15, or frequency scale 200-8k)
  * - Matte black ribbed skirt with bright white indicator notch
- * - Mouse drag (vertical/angular) + Touch support
+ * - Mouse drag (vertical) + Mouse Wheel support + Touch support
  * - Arrow keys for fine-tuning
  * - Double click to reset
+ * - Right click for MIDI Learn
  * - Dynamic tooltip with formatted engineering values
  */
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 
 export type ScaleType = '0_to_10' | 'minus15_to_15' | 'freq_scale';
 
@@ -23,6 +24,10 @@ interface KnobWithScaleProps {
   unit?: string;
   scaleType?: ScaleType;
   subLabelComponent?: React.ReactNode;
+  midiLearnId?: string;
+  isMidiMapped?: boolean;
+  midiCc?: number;
+  onMidiLearn?: (id: string, label: string) => void;
   onChange: (val: number) => void;
   formatValue?: (val: number) => string;
 }
@@ -37,6 +42,10 @@ export const KnobWithScale: React.FC<KnobWithScaleProps> = ({
   unit = '',
   scaleType = '0_to_10',
   subLabelComponent,
+  midiLearnId,
+  isMidiMapped = false,
+  midiCc,
+  onMidiLearn,
   onChange,
   formatValue,
 }) => {
@@ -94,6 +103,8 @@ export const KnobWithScale: React.FC<KnobWithScaleProps> = ({
   const currentScale = scales[scaleType];
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    // Only drag on primary left button click
+    if (e.button !== 0) return;
     e.preventDefault();
     setIsDragging(true);
     setShowTooltip(true);
@@ -122,6 +133,27 @@ export const KnobWithScale: React.FC<KnobWithScaleProps> = ({
     } catch {}
   };
 
+  // Mouse Wheel Adjustment
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const dir = -Math.sign(e.deltaY);
+    const multiplier = e.shiftKey ? 1 : 2;
+    const delta = dir * step * multiplier;
+    let newVal = Math.max(min, Math.min(max, value + delta));
+    const stepped = Math.round(newVal / step) * step;
+    onChange(Number(stepped.toFixed(2)));
+  };
+
+  // Right Click MIDI Learn
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onMidiLearn) {
+      onMidiLearn(midiLearnId || label, label);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     let nextVal = value;
     if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
@@ -143,6 +175,8 @@ export const KnobWithScale: React.FC<KnobWithScaleProps> = ({
       className="flex flex-col items-center select-none relative group"
       tabIndex={0}
       onKeyDown={handleKeyDown}
+      onWheel={handleWheel}
+      onContextMenu={handleContextMenu}
       role="slider"
       aria-label={label}
       aria-valuemin={min}
@@ -151,8 +185,11 @@ export const KnobWithScale: React.FC<KnobWithScaleProps> = ({
     >
       {/* Tooltip on hover / drag */}
       {showTooltip && (
-        <div className="absolute -top-6 z-30 px-1.5 py-0.5 rounded bg-black/90 border border-neutral-600 text-[9px] font-mono text-cyan-300 shadow-lg pointer-events-none whitespace-nowrap">
+        <div className="absolute -top-6 z-30 px-1.5 py-0.5 rounded bg-black/95 border border-neutral-600 text-[9px] font-mono text-cyan-300 shadow-xl pointer-events-none whitespace-nowrap">
           {formattedDisplay}
+          {isMidiMapped && (
+            <span className="ml-1 text-[8px] text-amber-400 font-bold">CC{midiCc}</span>
+          )}
         </div>
       )}
 
@@ -202,6 +239,14 @@ export const KnobWithScale: React.FC<KnobWithScaleProps> = ({
             <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#1b1d24] to-[#343a47] shadow-inner border border-black/50" />
           </div>
         </div>
+
+        {/* Optional MIDI Learn Badge Dot */}
+        {isMidiMapped && (
+          <span
+            title={`Mapeado para MIDI CC ${midiCc}`}
+            className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-400 border border-black shadow-[0_0_4px_#fbbf24]"
+          />
+        )}
       </div>
 
       {/* Label under knob */}

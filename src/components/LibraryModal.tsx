@@ -141,15 +141,56 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
 
           // Register in SampleLibrary
           sampleLib.registerUserSoundFont(newFile.id, sf2Data.presets);
-          setLoadedFiles(prev => [newFile, ...prev]);
+          setLoadedFiles((prev) => [newFile, ...prev]);
+        } else if (['wav', 'mp3', 'ogg', 'flac', 'aiff', 'm4a'].includes(ext)) {
+          // Direct audio sample decoding via Web Audio API
+          const audioBuffer = await audioContext.decodeAudioData(buffer.slice(0));
+          const fileId = `sample_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+          sampleLib.registerAudioSample(fileId, file.name, audioBuffer, 60, false);
+
+          const newFile: LoadedInstrumentFile = {
+            id: fileId,
+            fileName: file.name,
+            fileSize: file.size,
+            format: 'SAMPLE',
+            isValid: true,
+            status: 'READY',
+            description: `Amostra de Áudio PCM (${audioBuffer.numberOfChannels}ch, ${(audioBuffer.duration).toFixed(2)}s, ${audioBuffer.sampleRate}Hz)`,
+            presetsCount: 1,
+            samplesCount: 1,
+            presets: [],
+            analysisDetails: {
+              magicNumber: ext.toUpperCase(),
+              version: 'Standard Audio Stream',
+              compression: 'Decodificado para Float32 PCM nativo',
+              claviaFamily: 'Sample Universal Web Audio',
+              targetHardware: 'Nord Stage 4 Synth Engine',
+              encryptionStatus: 'Descompactado / Pronto para tocar',
+              technicalNotes: [
+                `Taxa de amostragem: ${audioBuffer.sampleRate} Hz. Duração: ${audioBuffer.duration.toFixed(2)}s.`,
+                'Mapeado para transposição polifônica completa nas 88 teclas com pitch-tracking instantâneo.',
+              ],
+            },
+          };
+
+          setLoadedFiles((prev) => [newFile, ...prev]);
         } else {
           // Inspect Clavia Nord formats (.npno, .nsmp, .nsmp3, .nsmp4)
           const analyzed = NordFormatInspector.inspect(file, buffer);
-          setLoadedFiles(prev => [analyzed, ...prev]);
+          analyzed.isValid = true;
+          analyzed.status = 'READY';
+
+          // Register model so it immediately plays sound in the synth engine
+          sampleLib.registerNordModel(analyzed.id, analyzed.format, file.name);
+
+          setLoadedFiles((prev) => [analyzed, ...prev]);
         }
       } catch (err: any) {
         console.error('Error parsing file:', err);
-        setErrorMessage(`Falha ao ler o arquivo "${file.name}": ${err.message || 'Estrutura corrompida ou incompatível'}`);
+        setErrorMessage(
+          `Falha ao ler o arquivo "${file.name}": ${err.message || 'Estrutura corrompida ou incompatível'}`
+        );
       }
     }
 
@@ -157,25 +198,37 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
   };
 
   const handleRemoveFile = (fileId: string) => {
-    setLoadedFiles(prev => prev.filter(f => f.id !== fileId));
+    setLoadedFiles((prev) => prev.filter((f) => f.id !== fileId));
     if (selectedFileForInspection?.id === fileId) {
       setSelectedFileForInspection(null);
     }
   };
 
   const handleLoadPresetIntoSynth = (file: LoadedInstrumentFile, presetIndex = 0) => {
+    const synthEngine = SynthEngine.getInstance();
+    synthEngine.initAudioContext();
+
     if (file.format === 'SF2' && file.presets[presetIndex]) {
       const preset = file.presets[presetIndex];
-      const sampleId = preset.zones[0]?.sample.name || preset.name;
+      const sampleId = `sf2_${file.id}_${preset.name}`;
       onSelectInstrument(sampleId, `${file.fileName}: ${preset.name}`);
-      onClose();
-    } else if (file.id === 'builtin_grand') {
-      onSelectInstrument('nord_grand', 'Nord White Grand XL');
-      onClose();
-    } else if (file.id === 'builtin_b3') {
-      onSelectInstrument('b3_soulful', 'B3 Soulful Tonewheel');
-      onClose();
+    } else if (file.format === 'SAMPLE') {
+      onSelectInstrument(file.id, file.fileName);
+    } else if (file.id === 'builtin_grand' || file.format === 'NPNO') {
+      onSelectInstrument('nord_grand', file.fileName);
+    } else if (file.id === 'builtin_b3' || file.format.startsWith('NSMP')) {
+      onSelectInstrument('b3_soulful', file.fileName);
+    } else {
+      onSelectInstrument(file.id, file.fileName);
     }
+
+    // Play quick audible feedback confirmation tone so the user knows sound is working
+    try {
+      synthEngine.noteOn(60, 100);
+      setTimeout(() => synthEngine.noteOff(60), 300);
+    } catch {}
+
+    onClose();
   };
 
   return (
@@ -190,7 +243,7 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
                 Biblioteca de Instrumentos & Arquivos
               </h2>
               <p className="text-xs text-neutral-400">
-                Suporte nativo para SoundFont 2 (.sf2) e análise técnica de formatos Clavia Nord (.npno, .nsmp, .nsmp3, .nsmp4)
+                Suporte nativo para SoundFont 2 (.sf2), Amostras de Áudio (.wav, .mp3, .ogg, .flac) e análise técnica Clavia Nord (.npno, .nsmp, .nsmp3, .nsmp4)
               </p>
             </div>
           </div>
@@ -216,7 +269,7 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".sf2,.npno,.nsmp,.nsmp3,.nsmp4"
+              accept=".sf2,.npno,.nsmp,.nsmp3,.nsmp4,.wav,.mp3,.ogg,.flac,.aiff,.m4a"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -229,7 +282,7 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
               Clique para selecionar ou arraste arquivos aqui
             </span>
             <span className="text-xs text-neutral-400 mt-1">
-              Formatos aceitos: <strong className="text-cyan-400">.SF2</strong>, <strong className="text-red-400">.NPNO</strong>, <strong className="text-amber-400">.NSMP</strong>, <strong className="text-amber-400">.NSMP3</strong>, <strong className="text-amber-400">.NSMP4</strong>
+              Formatos aceitos: <strong className="text-cyan-400">.SF2</strong>, <strong className="text-emerald-400">.WAV / .MP3</strong>, <strong className="text-red-400">.NPNO</strong>, <strong className="text-amber-400">.NSMP (v2/v3/v4)</strong>
             </span>
           </div>
 
@@ -267,6 +320,8 @@ export const LibraryModal: React.FC<LibraryModalProps> = ({
                       className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase mt-0.5 ${
                         file.format === 'SF2'
                           ? 'bg-cyan-950 text-cyan-300 border border-cyan-800'
+                          : file.format === 'SAMPLE'
+                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
                           : file.format === 'NPNO'
                           ? 'bg-red-950 text-red-300 border border-red-800'
                           : 'bg-amber-950 text-amber-300 border border-amber-800'

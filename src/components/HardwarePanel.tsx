@@ -15,6 +15,7 @@ import { Oscilloscope } from './Oscilloscope';
 interface HardwarePanelProps {
   viewMode: 'hardware' | 'responsive';
   zoomLevel: number;
+  isKeyboardVisible?: boolean;
   params: SynthParams;
   currentPreset: Preset;
   presets: Preset[];
@@ -29,6 +30,7 @@ interface HardwarePanelProps {
 export const HardwarePanel: React.FC<HardwarePanelProps> = ({
   viewMode,
   zoomLevel,
+  isKeyboardVisible = true,
   params,
   currentPreset,
   presets,
@@ -72,15 +74,17 @@ export const HardwarePanel: React.FC<HardwarePanelProps> = ({
     };
   }, [viewMode]);
 
-  // Compute responsive auto-scale so the entire console fits 100% of notebook screen width
-  const fitScale = containerWidth > 0 ? Math.min(1.0, (containerWidth - 8) / nominalWidth) : 1.0;
+  // Compute responsive auto-scale so the entire console fits 100% of notebook screen
+  // When keyboard is hidden, allow the console to expand even more to fill the full notebook display
+  const widthRatio = containerWidth > 0 ? (containerWidth - 8) / nominalWidth : 1.0;
+  const fitScale = !isKeyboardVisible ? Math.min(1.25, Math.max(0.65, widthRatio)) : Math.min(1.0, widthRatio);
   const effectiveScale = Math.max(0.35, fitScale * zoomLevel);
 
   if (viewMode === 'hardware') {
     return (
       <div
         ref={containerRef}
-        className="w-full flex justify-center items-start overflow-hidden px-1 md:px-2 select-none"
+        className="w-full h-full flex justify-center items-center overflow-hidden px-1 md:px-2 select-none"
       >
         <div
           style={{
